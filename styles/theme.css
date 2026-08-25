@@ -1,0 +1,22 @@
+/* CDN Fonts */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&family=Jeju+Myeongjo&family=Qwigley&display=swap');
+
+/* Font Faces */
+@font-face {
+  font-family: 'Abigail';
+  font-style: normal;
+  src:
+    url(../fonts/abigail.woff) format('woff'),
+    url(../fonts/abigail.otf) format('opentype');
+  font-display: swap;
+}
+
+/* CSS Variables */
+:root {
+  --font-ko-main: 'Pretendard', sans-serif;
+  --font-ko-sub: 'Pretendard', sans-serif;
+  --font-en-main: 'Abigail', cursive;
+  --color-primary: #f6f3ec;
+  --color-secondary: #897558;
+}
