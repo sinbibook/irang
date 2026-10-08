@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "version": "1.1.0",
-    "generatedAt": "2026-10-08T09:13:45.043544527Z",
+    "version": "1.2.0",
+    "generatedAt": "2026-10-08T09:14:56.859460073Z",
     "templateType": "trip_d",
     "propertyId": "62f84a55-9a57-48ce-a660-68d635186b6a",
     "homepageId": "babfbaae-d02f-445e-9cb4-537947ccb1e9"
@@ -2394,7 +2394,28 @@
             ]
           }
         ],
-        "facility": [ ],
+        "facility": [
+          {
+            "id": "4e4ad143-ee1f-4399-940b-2f739cc17d04",
+            "sections": [
+              {
+                "hero": {
+                  "title": "",
+                  "images": [ ]
+                },
+                "about": {
+                  "title": "계절이 뚜렷히 보이는 공간,\n횡성 이랑둔내휴양림 독채 애견동반 펜션에 오신 것을 환영합니다.\n큰 창문 너머로 펼쳐지는 사계절의 아름다움 눈으로 담아보세요.",
+                  "images": [ ]
+                },
+                "experience": {
+                  "features": [ ],
+                  "additionalInfos": [ ],
+                  "benefits": [ ]
+                }
+              }
+            ]
+          }
+        ],
         "reservation": {
           "sections": [
             {
