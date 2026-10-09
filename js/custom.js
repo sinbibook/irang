@@ -20,19 +20,76 @@
     return ('0' + n).slice(-2);
   }
 
-  // loop는 슬라이드가 충분할 때만 (데이터 주입 전 0개·슬라이드 부족 시 Swiper 경고/오작동 방지)
-  function withSafeLoop(el, options) {
-    if (!options || !options.loop) return options;
+  // 슬라이더 컨트롤(페이지네이션/화살표) 표시 토글 — 셀렉터는 슬라이더 주변으로 한정해서 탐색
+  function toggleControl(el, selector, show) {
+    if (!selector || typeof selector !== 'string') return;
+    var scopes = [el, el.parentNode, el.parentNode && el.parentNode.parentNode];
+    for (var i = 0; i < scopes.length; i++) {
+      if (!scopes[i] || !scopes[i].querySelectorAll) continue;
+      var found = scopes[i].querySelectorAll(selector);
+      if (found.length) {
+        Array.prototype.forEach.call(found, function (node) {
+          node.style.display = show ? '' : 'none';
+        });
+        return;
+      }
+    }
+  }
+
+  // 실제 슬라이드 개수에 맞춰 옵션 보정 (템플릿: 시설마다 객실/이미지 개수가 다름)
+  //  - slidesPerView(breakpoints 포함)를 슬라이드 수 이하로 클램프 → 빈 칸 없이 꽉 차게 노출
+  //  - loop는 슬라이드가 충분할 때만 (데이터 주입 전 0개·슬라이드 부족 시 Swiper 경고/오작동 방지)
+  //  - hideControlsWhenFit 옵션 → 현재 브레이크포인트에서 슬라이드가 다 보이면 페이지네이션/화살표 숨김
+  //    (예: 객실 2개 → PC(3그리드)는 넘길 게 없어 숨김 / 모바일(1그리드)은 노출)
+  function withSlideCount(el, options) {
+    if (!options) return options;
     var count = el.querySelectorAll('.swiper-slide').length;
-    var perView = typeof options.slidesPerView === 'number' ? options.slidesPerView : 1;
+    var maxPerView = typeof options.slidesPerView === 'number' ? options.slidesPerView : 1;
+    var watchFit = options.hideControlsWhenFit;
+    delete options.hideControlsWhenFit;
+
+    function clamp(o) {
+      if (typeof o.slidesPerView === 'number' && count > 0) {
+        o.slidesPerView = Math.min(o.slidesPerView, count);
+      }
+    }
+    clamp(options);
     if (options.breakpoints) {
       Object.keys(options.breakpoints).forEach(function (bp) {
         var v = options.breakpoints[bp].slidesPerView;
-        if (typeof v === 'number' && v > perView) perView = v;
+        if (typeof v === 'number' && v > maxPerView) maxPerView = v;
+        clamp(options.breakpoints[bp]);
       });
     }
-    if (count <= perView) options.loop = false;
+
+    if (options.loop && count <= maxPerView) options.loop = false;
+
+    if (watchFit) attachFitWatcher(el, options, count);
     return options;
+  }
+
+  // 브레이크포인트마다 "슬라이드가 전부 보이는지" 확인해 컨트롤 표시/숨김을 동기화
+  function attachFitWatcher(el, options, count) {
+    var pagEl = options.pagination && options.pagination.el;
+    var nextEl = options.navigation && options.navigation.nextEl;
+    var prevEl = options.navigation && options.navigation.prevEl;
+
+    function sync(swiper) {
+      var per = swiper.params.slidesPerView;
+      var show = count > (typeof per === 'number' ? per : 1);
+      toggleControl(el, pagEl, show);
+      toggleControl(el, nextEl, show);
+      toggleControl(el, prevEl, show);
+    }
+
+    var on = (options.on = options.on || {});
+    ['init', 'breakpoint', 'resize'].forEach(function (name) {
+      var prev = on[name];
+      on[name] = function () {
+        if (prev) prev.apply(this, arguments);
+        sync(this);
+      };
+    });
   }
 
   // ── Swiper 슬라이더 (동적 슬라이드 주입 후 재호출 가능: destroy 후 재생성) ──
@@ -40,7 +97,7 @@
     var el = document.querySelector(selector);
     if (!el || typeof Swiper === 'undefined') return null;
     if (el.swiper) el.swiper.destroy(true, true);
-    return new Swiper(selector, withSafeLoop(el, options));
+    return new Swiper(selector, withSlideCount(el, options));
   }
 
   function specOnChange() {
@@ -62,7 +119,7 @@
     var specTxt = txtEl
       ? new Swiper(
           '.spec-txt',
-          withSafeLoop(txtEl, {
+          withSlideCount(txtEl, {
             loop: true,
             spaceBetween: 10,
             effect: 'fade',
@@ -75,7 +132,7 @@
         )
       : null;
 
-    var imgOpts = withSafeLoop(imgEl, {
+    var imgOpts = withSlideCount(imgEl, {
       loop: true,
       effect: 'fade',
       speed: 500,
@@ -129,8 +186,9 @@
     // 스페셜 (텍스트+이미지 thumbs 연동)
     initSpecSwiper();
 
-    // 객실 미리보기
+    // 객실 미리보기 (객실 수에 따라 1개=100% / 2개=2그리드 / 3개 이상=3그리드로 자동 보정)
     makeSwiper('.preivew .swiper-container', {
+      hideControlsWhenFit: true,
       slidesPerView: 1,
       spaceBetween: 20,
       speed: 500,
